@@ -48,13 +48,22 @@ async function apiCall(endpoint, options = {}) {
             return { error: 'Session expired. Please login again.', _status: 401 };
         }
 
-        const data = await response.json();
+        // Try to parse JSON, fall back to text error
+        let data;
+        const text = await response.text();
+        try {
+            data = JSON.parse(text);
+        } catch (parseErr) {
+            console.error('API non-JSON response:', endpoint, response.status, text.substring(0, 200));
+            return { error: 'Server error (' + response.status + '). Please try again.', _status: response.status };
+        }
+
         data._status = response.status;
         return data;
 
     } catch (error) {
-        console.error('API Error:', endpoint, error);
-        return { error: 'Network error. Please try again.', _status: 0 };
+        console.error('API Error:', endpoint, error.message);
+        return { error: 'Network error: ' + error.message, _status: 0 };
     }
 }
 
