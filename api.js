@@ -19,8 +19,8 @@ function getAuthHeaders(isJSON = true) {
     return headers;
 }
 
-// ---- CORE API CALL ----
-async function apiCall(endpoint, options = {}) {
+// ---- CORE API CALL (with auto-retry for Render cold starts) ----
+async function apiCall(endpoint, options = {}, _retryCount = 0) {
     const isFormData = options.body instanceof FormData;
     const headers = getAuthHeaders(!isFormData);
 
@@ -58,8 +58,34 @@ async function apiCall(endpoint, options = {}) {
         return data;
 
     } catch (error) {
-        console.error('API Error:', endpoint, error.message);
-        return { error: 'Network error. Please check your connection.', _status: 0 };
+        console.error('API Error:', endpoint, error.message, 'retry:', _retryCount);
+
+        // Render free tier sleeps after inactivity - auto retry up to 2 times
+        if (_retryCount < 2) {
+            console.log('Server may be waking up... retrying in ' + ((_retryCount + 1) * 3) + 's');
+            showServerWaking(true);
+            await new Promise(r => setTimeout(r, (_retryCount + 1) * 3000));
+            return apiCall(endpoint, options, _retryCount + 1);
+        }
+
+        showServerWaking(false);
+        return { error: 'Server is starting up. Please wait 30 seconds and try again.', _status: 0 };
+    }
+}
+
+// ---- Show/hide "server waking up" banner ----
+function showServerWaking(show) {
+    let banner = document.getElementById('server-waking-banner');
+    if (show) {
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'server-waking-banner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#FF9800;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:600;animation:pulse 1.5s infinite;';
+            banner.textContent = 'Waking up server... please wait a moment';
+            document.body.prepend(banner);
+        }
+    } else {
+        if (banner) banner.remove();
     }
 }
 
