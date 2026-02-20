@@ -1,10 +1,7 @@
 /* ============================================
    GURU.AI PARENT PORTAL - API LAYER
    All backend communication goes through here.
-
-   API_BASE: empty string = same origin (served from Flask)
-   Change to full URL if hosting separately, e.g.:
-   const API_BASE = 'https://guru-ai-k1so.onrender.com';
+   API_BASE points to the Render-hosted Flask backend.
    ============================================ */
 
 const API_BASE = 'https://guru-ai-mvp.onrender.com';
@@ -27,12 +24,11 @@ async function apiCall(endpoint, options = {}) {
     const isFormData = options.body instanceof FormData;
     const headers = getAuthHeaders(!isFormData);
 
-    // Merge any extra headers (but don't set Content-Type for FormData)
     if (options.headers) {
         Object.assign(headers, options.headers);
     }
     if (isFormData) {
-        delete headers['Content-Type']; // browser sets boundary automatically
+        delete headers['Content-Type'];
     }
 
     try {
@@ -44,7 +40,7 @@ async function apiCall(endpoint, options = {}) {
         // Handle 401 - token expired or invalid
         if (response.status === 401) {
             clearAuthData();
-            showPage('login-page');
+            showScreen('welcome-screen');
             return { error: 'Session expired. Please login again.', _status: 401 };
         }
 
@@ -63,7 +59,7 @@ async function apiCall(endpoint, options = {}) {
 
     } catch (error) {
         console.error('API Error:', endpoint, error.message);
-        return { error: 'Network error: ' + error.message, _status: 0 };
+        return { error: 'Network error. Please check your connection.', _status: 0 };
     }
 }
 
@@ -78,10 +74,12 @@ async function apiLogin(email, password) {
     });
 }
 
-async function apiSignup(name, email, password) {
+async function apiSignup(name, email, password, phone) {
+    const payload = { name, email, password };
+    if (phone) payload.phone = phone;
     return apiCall('/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify(payload)
     });
 }
 

@@ -2,300 +2,430 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Guru.ai - Parent Portal</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <!-- ======== LOGIN PAGE ======== -->
-    <div id="login-page" class="page active">
-        <div class="auth-container">
-            <div class="auth-logo">
-                <div class="logo-icon">G</div>
-                <h1>Guru.ai</h1>
-                <p class="tagline">Parent Portal</p>
+<!-- ============================================================ -->
+<!-- WELCOME SCREEN -->
+<!-- ============================================================ -->
+<div id="welcome-screen" class="screen active">
+    <div class="welcome-container">
+        <div class="welcome-logo">
+            <div class="logo-circle">
+                <span class="logo-letter">G</span>
             </div>
-            <div class="auth-tabs">
-                <button class="tab-btn active" data-tab="login-tab">Login</button>
-                <button class="tab-btn" data-tab="signup-tab">Sign Up</button>
-                <button class="tab-btn" data-tab="setpw-tab">Set Password</button>
+            <h1 class="welcome-title">Guru.ai</h1>
+            <p class="welcome-tagline">Your Child's AI Study Companion</p>
+        </div>
+        <div class="welcome-illustration">
+            <div class="guru-character">
+                <div class="guru-body"></div>
+                <div class="guru-glow"></div>
             </div>
-
-            <!-- Login Tab -->
-            <div id="login-tab" class="tab-content active">
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="login-email">Email</label>
-                        <input type="email" id="login-email" placeholder="parent@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" placeholder="Enter password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-full">
-                        <span class="btn-text">Login</span>
-                        <span class="btn-loading" style="display:none;">Logging in...</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Signup Tab -->
-            <div id="signup-tab" class="tab-content">
-                <form id="signup-form">
-                    <div class="form-group">
-                        <label for="signup-name">Full Name</label>
-                        <input type="text" id="signup-name" placeholder="Your name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-email">Email</label>
-                        <input type="email" id="signup-email" placeholder="parent@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-phone">Phone (optional)</label>
-                        <input type="tel" id="signup-phone" placeholder="+91 98765 43210">
-                    </div>
-                    <div class="form-group">
-                        <label for="signup-password">Password (min 6 chars)</label>
-                        <input type="password" id="signup-password" placeholder="Create password" minlength="6" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-full">
-                        <span class="btn-text">Create Account</span>
-                        <span class="btn-loading" style="display:none;">Creating...</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Set Password Tab (legacy accounts) -->
-            <div id="setpw-tab" class="tab-content">
-                <p class="tab-description">For accounts created before authentication was added.</p>
-                <form id="setpw-form">
-                    <div class="form-group">
-                        <label for="setpw-email">Email</label>
-                        <input type="email" id="setpw-email" placeholder="Your existing email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="setpw-password">New Password (min 6 chars)</label>
-                        <input type="password" id="setpw-password" placeholder="Choose password" minlength="6" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-full">
-                        <span class="btn-text">Set Password</span>
-                        <span class="btn-loading" style="display:none;">Setting...</span>
-                    </button>
-                </form>
-            </div>
-
-            <div id="auth-error" class="msg msg-error" style="display:none;"></div>
-            <div id="auth-success" class="msg msg-success" style="display:none;"></div>
+        </div>
+        <div class="welcome-buttons">
+            <button class="btn btn-primary btn-lg" onclick="showScreen('signup-screen')">Create Account</button>
+            <button class="btn btn-outline btn-lg" onclick="showScreen('login-screen')">Login</button>
         </div>
     </div>
+</div>
 
-    <!-- ======== DASHBOARD ======== -->
-    <div id="dashboard-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <div class="nav-logo">Guru.ai</div>
-            </div>
-            <div class="nav-right">
-                <span id="nav-parent-name" class="nav-name"></span>
-                <button id="logout-btn" class="btn btn-small btn-outline">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <h1 class="page-title">Welcome, <span id="welcome-name"></span>!</h1>
-
-            <div class="stats-grid">
-                <div class="stat-card stat-blue">
-                    <div class="stat-number" id="stat-students">0</div>
-                    <div class="stat-label">Students</div>
+<!-- ============================================================ -->
+<!-- LOGIN SCREEN -->
+<!-- ============================================================ -->
+<div id="login-screen" class="screen">
+    <div class="auth-container">
+        <button class="back-btn" onclick="showScreen('welcome-screen')">&#8592;</button>
+        <div class="auth-header">
+            <div class="logo-small">G</div>
+            <h1>Welcome Back!</h1>
+            <p>Login to monitor your child's progress</p>
+        </div>
+        <form id="login-form" class="auth-form">
+            <div class="input-group">
+                <label>Email</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#9993;</span>
+                    <input type="email" id="login-email" placeholder="parent@email.com" required>
                 </div>
-                <div class="stat-card stat-brown">
-                    <div class="stat-number" id="stat-textbooks">0</div>
-                    <div class="stat-label">Textbooks</div>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#128274;</span>
+                    <input type="password" id="login-password" placeholder="Enter password" required>
+                    <button type="button" class="toggle-pw" onclick="togglePassword('login-password', this)">&#128065;</button>
+                </div>
+            </div>
+            <div class="form-options">
+                <label class="checkbox-wrap">
+                    <input type="checkbox" id="remember-me"> Remember me
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg btn-full">
+                <span class="btn-text">Login</span>
+                <span class="btn-loader" style="display:none;"></span>
+            </button>
+            <div id="login-error" class="msg-error" style="display:none;"></div>
+        </form>
+        <div class="auth-footer">
+            <p>New parent? <a href="#" onclick="showScreen('signup-screen')">Create Account</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SIGNUP SCREEN -->
+<!-- ============================================================ -->
+<div id="signup-screen" class="screen">
+    <div class="auth-container">
+        <button class="back-btn" onclick="showScreen('welcome-screen')">&#8592;</button>
+        <div class="auth-header">
+            <div class="logo-small">G</div>
+            <h1>Create Account</h1>
+            <p>Join thousands of parents helping their children learn better</p>
+        </div>
+        <form id="signup-form" class="auth-form">
+            <div class="input-group">
+                <label>Full Name</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#128100;</span>
+                    <input type="text" id="signup-name" placeholder="Your full name" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#9993;</span>
+                    <input type="email" id="signup-email" placeholder="parent@email.com" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Phone (optional)</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#128222;</span>
+                    <input type="tel" id="signup-phone" placeholder="+91 98765 43210">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Password (min 6 characters)</label>
+                <div class="input-icon-wrap">
+                    <span class="input-icon">&#128274;</span>
+                    <input type="password" id="signup-password" placeholder="Create password" minlength="6" required>
+                    <button type="button" class="toggle-pw" onclick="togglePassword('signup-password', this)">&#128065;</button>
+                </div>
+                <div id="pw-strength" class="pw-strength-bar"><div class="pw-fill"></div></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg btn-full">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-loader" style="display:none;"></span>
+            </button>
+            <div id="signup-error" class="msg-error" style="display:none;"></div>
+        </form>
+        <div class="auth-footer">
+            <p>Already have an account? <a href="#" onclick="showScreen('login-screen')">Login</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SETUP: STEP 1 - PAIR DEVICE -->
+<!-- ============================================================ -->
+<div id="setup-device-screen" class="screen">
+    <div class="setup-container">
+        <div class="progress-steps">
+            <div class="step active">1</div>
+            <div class="step-line"></div>
+            <div class="step">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+            <div class="step-line"></div>
+            <div class="step">4</div>
+        </div>
+        <h1>Connect Your Guru Device</h1>
+        <p class="setup-sub">Enter the 6-digit code shown on your Guru device screen</p>
+        <div class="device-code-input">
+            <input type="text" id="setup-device-code" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="000000" class="code-input">
+        </div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="setupPairDevice()">
+            <span class="btn-text">Connect Device</span>
+            <span class="btn-loader" style="display:none;"></span>
+        </button>
+        <div id="setup-device-error" class="msg-error" style="display:none;"></div>
+        <div id="setup-device-success" class="msg-success" style="display:none;"></div>
+        <button class="btn-skip" onclick="showScreen('setup-students-screen')">Skip for Now</button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SETUP: STEP 2 - ADD STUDENTS -->
+<!-- ============================================================ -->
+<div id="setup-students-screen" class="screen">
+    <div class="setup-container">
+        <div class="progress-steps">
+            <div class="step done">&#10003;</div>
+            <div class="step-line active"></div>
+            <div class="step active">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+            <div class="step-line"></div>
+            <div class="step">4</div>
+        </div>
+        <h1>Tell Us About Your Children</h1>
+        <p class="setup-sub">You can add up to 2 students</p>
+        <div class="student-form-card">
+            <h3>Student 1</h3>
+            <div class="input-group">
+                <input type="text" id="setup-s1-name" placeholder="Child's name" required>
+            </div>
+            <div class="form-row-2">
+                <select id="setup-s1-class" required>
+                    <option value="">Class</option>
+                    <option value="Class 2">Class 2</option>
+                    <option value="Class 3">Class 3</option>
+                    <option value="Class 4">Class 4</option>
+                    <option value="Class 5">Class 5</option>
+                    <option value="Class 6">Class 6</option>
+                    <option value="Class 7">Class 7</option>
+                </select>
+                <select id="setup-s1-board">
+                    <option value="CBSE">CBSE</option>
+                    <option value="ICSE">ICSE</option>
+                    <option value="State Board">State Board</option>
+                </select>
+            </div>
+        </div>
+        <div id="setup-s2-section" class="student-form-card" style="display:none;">
+            <h3>Student 2</h3>
+            <div class="input-group">
+                <input type="text" id="setup-s2-name" placeholder="Child's name">
+            </div>
+            <div class="form-row-2">
+                <select id="setup-s2-class">
+                    <option value="">Class</option>
+                    <option value="Class 2">Class 2</option>
+                    <option value="Class 3">Class 3</option>
+                    <option value="Class 4">Class 4</option>
+                    <option value="Class 5">Class 5</option>
+                    <option value="Class 6">Class 6</option>
+                    <option value="Class 7">Class 7</option>
+                </select>
+                <select id="setup-s2-board">
+                    <option value="CBSE">CBSE</option>
+                    <option value="ICSE">ICSE</option>
+                    <option value="State Board">State Board</option>
+                </select>
+            </div>
+            <button class="btn-remove" onclick="hideSecondStudent()">Remove</button>
+        </div>
+        <button id="add-s2-btn" class="btn btn-outline btn-full" onclick="showSecondStudent()" style="margin-bottom:16px;">+ Add Second Student</button>
+        <div id="setup-students-error" class="msg-error" style="display:none;"></div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="setupAddStudents()">
+            <span class="btn-text">Continue</span>
+            <span class="btn-loader" style="display:none;"></span>
+        </button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SETUP: STEP 3 - UPLOAD TEXTBOOKS -->
+<!-- ============================================================ -->
+<div id="setup-textbooks-screen" class="screen">
+    <div class="setup-container">
+        <div class="progress-steps">
+            <div class="step done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step done">&#10003;</div>
+            <div class="step-line active"></div>
+            <div class="step active">3</div>
+            <div class="step-line"></div>
+            <div class="step">4</div>
+        </div>
+        <h1>Upload Textbooks</h1>
+        <p class="setup-sub">Upload your child's textbooks so Guru can help with studies</p>
+        <div class="subject-upload-grid">
+            <div class="subject-upload-card" data-subject="Mathematics">
+                <span class="subject-emoji">&#128208;</span>
+                <span class="subject-name">Maths</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+            <div class="subject-upload-card" data-subject="Science">
+                <span class="subject-emoji">&#128300;</span>
+                <span class="subject-name">Science</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+            <div class="subject-upload-card" data-subject="English">
+                <span class="subject-emoji">&#128214;</span>
+                <span class="subject-name">English</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+            <div class="subject-upload-card" data-subject="Hindi">
+                <span class="subject-emoji">&#127470;&#127475;</span>
+                <span class="subject-name">Hindi</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+            <div class="subject-upload-card" data-subject="Social Studies">
+                <span class="subject-emoji">&#127758;</span>
+                <span class="subject-name">Social</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+            <div class="subject-upload-card" data-subject="EVS">
+                <span class="subject-emoji">&#127793;</span>
+                <span class="subject-name">EVS</span>
+                <input type="file" accept=".pdf" class="subject-file-input" style="display:none;">
+                <button class="btn btn-small btn-outline upload-btn" onclick="triggerSubjectUpload(this)">Upload</button>
+                <span class="upload-status"></span>
+            </div>
+        </div>
+        <div id="setup-upload-progress" class="msg-info" style="display:none;"></div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="showScreen('setup-done-screen')">Continue</button>
+        <button class="btn-skip" onclick="showScreen('setup-done-screen')">I'll upload later</button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SETUP: STEP 4 - DONE -->
+<!-- ============================================================ -->
+<div id="setup-done-screen" class="screen">
+    <div class="setup-container setup-done-center">
+        <div class="progress-steps">
+            <div class="step done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step done">&#10003;</div>
+            <div class="step-line done"></div>
+            <div class="step done">&#10003;</div>
+        </div>
+        <div class="done-animation">
+            <div class="done-circle">&#10003;</div>
+        </div>
+        <h1>All Set!</h1>
+        <p class="setup-sub" id="setup-done-msg">Your Guru is ready to help your child learn</p>
+        <div class="done-summary">
+            <div class="done-item"><span class="done-check">&#10003;</span> Account Created</div>
+            <div class="done-item" id="done-device"><span class="done-check">&#10003;</span> Device Connected</div>
+            <div class="done-item" id="done-students"><span class="done-check">&#10003;</span> Students Added</div>
+            <div class="done-item" id="done-textbooks"><span class="done-check">&#10003;</span> Textbooks Uploaded</div>
+        </div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="finishSetup()">Get Started</button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MAIN APP SHELL -->
+<!-- ============================================================ -->
+<div id="app-shell" class="screen">
+    <nav class="top-nav">
+        <div class="nav-left">
+            <div class="nav-logo">G</div>
+            <span class="nav-title">Guru.ai</span>
+        </div>
+        <div class="nav-center">
+            <div class="student-switcher" id="student-switcher" onclick="toggleStudentDropdown()">
+                <span id="current-student-name">Student</span>
+                <span class="switcher-arrow">&#9660;</span>
+            </div>
+            <div id="student-dropdown" class="student-dropdown" style="display:none;"></div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-profile" onclick="toggleProfileMenu()">
+                <span id="nav-parent-initial" class="profile-initial">P</span>
+            </div>
+            <div id="profile-menu" class="profile-menu" style="display:none;">
+                <div class="profile-header">
+                    <span id="profile-name">Parent</span>
+                    <span id="profile-email">email</span>
+                </div>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+        <!-- HOME TAB -->
+        <div id="tab-home" class="tab-content active">
+            <div class="stats-row">
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon">&#9201;</div>
+                    <div class="stat-value" id="stat-study-time">0 min</div>
+                    <div class="stat-label">Today's Study</div>
                 </div>
                 <div class="stat-card stat-green">
-                    <div class="stat-number" id="stat-homework">0</div>
-                    <div class="stat-label">Homework</div>
+                    <div class="stat-icon">&#9989;</div>
+                    <div class="stat-value" id="stat-hw-done">0</div>
+                    <div class="stat-label">Homework Done</div>
                 </div>
-                <div class="stat-card stat-purple">
-                    <div class="stat-number" id="stat-sessions">0</div>
-                    <div class="stat-label">Sessions</div>
+                <div class="stat-card stat-orange">
+                    <div class="stat-icon">&#127919;</div>
+                    <div class="stat-value" id="stat-quiz-avg">-</div>
+                    <div class="stat-label">Quiz Avg</div>
+                </div>
+                <div class="stat-card stat-red">
+                    <div class="stat-icon">&#128293;</div>
+                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-label">Streak</div>
                 </div>
             </div>
-
-            <div class="quick-actions">
-                <button class="action-card" onclick="showPage('students-page')">
-                    <span class="action-icon">&#128101;</span>
-                    <span class="action-label">Students</span>
+            <div class="chart-card">
+                <h3>Learning Activities This Week</h3>
+                <p class="chart-sub" id="chart-sub-name">See how your child is using Guru</p>
+                <div class="chart-wrap"><canvas id="featureChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Performance by Subject</h3>
+                <div class="chart-wrap"><canvas id="subjectChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Skills Assessment</h3>
+                <p class="chart-sub">Based on Guru's AI analysis</p>
+                <div class="chart-wrap"><canvas id="skillsChart"></canvas></div>
+            </div>
+            <div class="section-card">
+                <h3>Recent Sessions</h3>
+                <div id="recent-sessions" class="list-container">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128218;</div>
+                        <p>No study sessions yet</p>
+                        <p class="empty-sub">Sessions appear after your child uses Guru</p>
+                    </div>
+                </div>
+            </div>
+            <div class="quick-actions-grid">
+                <button class="quick-action" onclick="switchTab('homework')">
+                    <span class="qa-icon">&#128221;</span><span>Assign Homework</span>
                 </button>
-                <button class="action-card" onclick="showPage('textbooks-page')">
-                    <span class="action-icon">&#128218;</span>
-                    <span class="action-label">Textbooks</span>
+                <button class="quick-action" onclick="switchTab('textbooks')">
+                    <span class="qa-icon">&#128218;</span><span>Upload Textbook</span>
                 </button>
-                <button class="action-card" onclick="showPage('homework-page')">
-                    <span class="action-icon">&#9999;&#65039;</span>
-                    <span class="action-label">Homework</span>
-                </button>
-                <button class="action-card" onclick="showPage('summaries-page')">
-                    <span class="action-icon">&#128202;</span>
-                    <span class="action-label">Summaries</span>
-                </button>
-                <button class="action-card" onclick="showPage('pairing-page')">
-                    <span class="action-icon">&#128241;</span>
-                    <span class="action-label">Pair Device</span>
+                <button class="quick-action" onclick="showScreen('setup-device-screen')">
+                    <span class="qa-icon">&#128241;</span><span>Pair Device</span>
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- ======== STUDENTS PAGE ======== -->
-    <div id="students-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <button class="btn btn-small btn-outline" onclick="showPage('dashboard-page')">&#8592; Back</button>
-                <div class="nav-logo">Students</div>
-            </div>
-            <div class="nav-right">
-                <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <div id="student-limit-msg" class="msg msg-info" style="display:none;"></div>
-
-            <div class="card" id="add-student-section">
-                <h2>Add Student</h2>
-                <form id="add-student-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="student-name">Name</label>
-                            <input type="text" id="student-name" placeholder="Child's name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="student-class">Class</label>
-                            <select id="student-class" required>
-                                <option value="">Select</option>
-                                <option value="Class 2">Class 2</option>
-                                <option value="Class 3">Class 3</option>
-                                <option value="Class 4">Class 4</option>
-                                <option value="Class 5">Class 5</option>
-                                <option value="Class 6">Class 6</option>
-                                <option value="Class 7">Class 7</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="student-board">Board</label>
-                            <select id="student-board">
-                                <option value="CBSE">CBSE</option>
-                                <option value="ICSE">ICSE</option>
-                                <option value="State Board">State Board</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <span class="btn-text">Add Student</span>
-                        <span class="btn-loading" style="display:none;">Adding...</span>
-                    </button>
-                </form>
-                <div id="add-student-error" class="msg msg-error" style="display:none;"></div>
-            </div>
-
-            <div id="students-list" class="list-container">
-                <div class="loading">Loading students...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======== TEXTBOOKS PAGE ======== -->
-    <div id="textbooks-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <button class="btn btn-small btn-outline" onclick="showPage('dashboard-page')">&#8592; Back</button>
-                <div class="nav-logo">Textbooks</div>
-            </div>
-            <div class="nav-right">
-                <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <div class="card">
-                <h2>Upload Textbook (PDF)</h2>
-                <form id="upload-textbook-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tb-book-name">Book Name</label>
-                            <input type="text" id="tb-book-name" placeholder="e.g. NCERT Maths" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tb-subject">Subject</label>
-                            <select id="tb-subject" required>
-                                <option value="">Select</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Science">Science</option>
-                                <option value="English">English</option>
-                                <option value="Hindi">Hindi</option>
-                                <option value="Social Studies">Social Studies</option>
-                                <option value="EVS">EVS</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="tb-class">Class</label>
-                            <select id="tb-class" required>
-                                <option value="">Select</option>
-                                <option value="Class 2">Class 2</option>
-                                <option value="Class 3">Class 3</option>
-                                <option value="Class 4">Class 4</option>
-                                <option value="Class 5">Class 5</option>
-                                <option value="Class 6">Class 6</option>
-                                <option value="Class 7">Class 7</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="tb-file">PDF File</label>
-                        <input type="file" id="tb-file" accept=".pdf" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <span class="btn-text">Upload Textbook</span>
-                        <span class="btn-loading" style="display:none;">Uploading...</span>
-                    </button>
-                </form>
-                <div id="upload-progress" class="progress-bar" style="display:none;">
-                    <div class="progress-fill"></div>
-                </div>
-                <div id="upload-error" class="msg msg-error" style="display:none;"></div>
-                <div id="upload-success" class="msg msg-success" style="display:none;"></div>
-            </div>
-
-            <div id="textbooks-list" class="list-container">
-                <div class="loading">Loading textbooks...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======== HOMEWORK PAGE ======== -->
-    <div id="homework-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <button class="btn btn-small btn-outline" onclick="showPage('dashboard-page')">&#8592; Back</button>
-                <div class="nav-logo">Homework</div>
-            </div>
-            <div class="nav-right">
-                <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <div class="card">
-                <h2>Assign Homework</h2>
-                <form id="add-homework-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="hw-student">Student</label>
-                            <select id="hw-student" required>
-                                <option value="">Select student</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="hw-subject">Subject</label>
+        <!-- HOMEWORK TAB -->
+        <div id="tab-homework" class="tab-content">
+            <div class="section-card">
+                <h3>Assign New Homework</h3>
+                <form id="hw-form">
+                    <div class="form-row-2">
+                        <div class="input-group"><label>Student</label><select id="hw-student" required></select></div>
+                        <div class="input-group"><label>Subject</label>
                             <select id="hw-subject" required>
                                 <option value="">Select</option>
                                 <option value="Mathematics">Mathematics</option>
@@ -307,100 +437,87 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="hw-text">Homework Description</label>
+                    <div class="input-group"><label>Homework Description</label>
                         <textarea id="hw-text" rows="3" placeholder="e.g. Complete page 45, questions 1-5" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                        <span class="btn-text">Assign Homework</span>
-                        <span class="btn-loading" style="display:none;">Saving...</span>
-                    </button>
-                </form>
-                <div id="homework-error" class="msg msg-error" style="display:none;"></div>
-                <div id="homework-success" class="msg msg-success" style="display:none;"></div>
-            </div>
-
-            <h2 class="section-title">Recent Homework</h2>
-            <div id="homework-list" class="list-container">
-                <div class="loading">Loading homework...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======== SUMMARIES PAGE ======== -->
-    <div id="summaries-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <button class="btn btn-small btn-outline" onclick="showPage('dashboard-page')">&#8592; Back</button>
-                <div class="nav-logo">Session Summaries</div>
-            </div>
-            <div class="nav-right">
-                <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <div class="filters-bar">
-                <div class="form-group">
-                    <label for="sum-student-filter">Filter by Student</label>
-                    <select id="sum-student-filter">
-                        <option value="">All Students</option>
-                    </select>
-                </div>
-                <button class="btn btn-small btn-primary" onclick="loadSummaries()">Refresh</button>
-            </div>
-
-            <div id="summaries-list" class="list-container">
-                <div class="loading">Loading summaries...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======== DEVICE PAIRING PAGE ======== -->
-    <div id="pairing-page" class="page">
-        <nav class="navbar">
-            <div class="nav-left">
-                <button class="btn btn-small btn-outline" onclick="showPage('dashboard-page')">&#8592; Back</button>
-                <div class="nav-logo">Pair Device</div>
-            </div>
-            <div class="nav-right">
-                <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
-            </div>
-        </nav>
-        <div class="container">
-            <div class="card pairing-card">
-                <h2>Connect Your Guru Device</h2>
-                <div class="pairing-instructions">
-                    <div class="step">
-                        <span class="step-num">1</span>
-                        <span>Turn on your Guru desk device</span>
-                    </div>
-                    <div class="step">
-                        <span class="step-num">2</span>
-                        <span>A 6-digit code will appear on the device screen</span>
-                    </div>
-                    <div class="step">
-                        <span class="step-num">3</span>
-                        <span>Enter the code below and tap "Pair"</span>
-                    </div>
-                </div>
-                <form id="pair-device-form">
-                    <div class="form-group">
-                        <label for="device-code">6-Digit Device Code</label>
-                        <input type="text" id="device-code" placeholder="000000" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required>
-                    </div>
                     <button type="submit" class="btn btn-primary btn-full">
-                        <span class="btn-text">Pair Device</span>
-                        <span class="btn-loading" style="display:none;">Pairing...</span>
+                        <span class="btn-text">Assign Homework</span><span class="btn-loader" style="display:none;"></span>
                     </button>
+                    <div id="hw-error" class="msg-error" style="display:none;"></div>
+                    <div id="hw-success" class="msg-success" style="display:none;"></div>
                 </form>
-                <div id="pairing-error" class="msg msg-error" style="display:none;"></div>
-                <div id="pairing-success" class="msg msg-success" style="display:none;"></div>
             </div>
+            <div class="section-card"><h3>Recent Homework</h3><div id="hw-list" class="list-container"><div class="skeleton-loader"></div></div></div>
         </div>
-    </div>
 
-    <script src="api.js"></script>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+        <!-- TEXTBOOKS TAB -->
+        <div id="tab-textbooks" class="tab-content">
+            <div class="section-card">
+                <h3>Upload Textbook</h3>
+                <form id="tb-form">
+                    <div class="form-row-2">
+                        <div class="input-group"><label>Book Name</label><input type="text" id="tb-name" placeholder="e.g. NCERT Maths" required></div>
+                        <div class="input-group"><label>Subject</label>
+                            <select id="tb-subject" required>
+                                <option value="">Select</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Social Studies">Social Studies</option>
+                                <option value="EVS">EVS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group"><label>Class Level</label>
+                        <select id="tb-class" required>
+                            <option value="">Select</option>
+                            <option value="Class 2">Class 2</option><option value="Class 3">Class 3</option>
+                            <option value="Class 4">Class 4</option><option value="Class 5">Class 5</option>
+                            <option value="Class 6">Class 6</option><option value="Class 7">Class 7</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>PDF File (max 50MB)</label><input type="file" id="tb-file" accept=".pdf" required></div>
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <span class="btn-text">Upload Textbook</span><span class="btn-loader" style="display:none;"></span>
+                    </button>
+                    <div id="tb-upload-progress" class="progress-bar" style="display:none;"><div class="progress-fill"></div></div>
+                    <div id="tb-error" class="msg-error" style="display:none;"></div>
+                    <div id="tb-success" class="msg-success" style="display:none;"></div>
+                </form>
+            </div>
+            <div class="section-card"><h3>My Textbooks</h3><div id="tb-list" class="list-container"><div class="skeleton-loader"></div></div></div>
+        </div>
+
+        <!-- SUMMARIES TAB -->
+        <div id="tab-summaries" class="tab-content">
+            <div class="filters-bar">
+                <select id="sum-student-filter"><option value="">All Students</option></select>
+                <button class="btn btn-small btn-outline" onclick="loadSummaries()">Refresh</button>
+            </div>
+            <div id="sum-list" class="list-container"><div class="skeleton-loader"></div></div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-tab active" data-tab="home" onclick="switchTab('home')">
+            <span class="tab-icon">&#127968;</span><span class="tab-label">Home</span>
+        </button>
+        <button class="nav-tab" data-tab="homework" onclick="switchTab('homework')">
+            <span class="tab-icon">&#9999;&#65039;</span><span class="tab-label">Homework</span>
+        </button>
+        <button class="nav-tab" data-tab="textbooks" onclick="switchTab('textbooks')">
+            <span class="tab-icon">&#128218;</span><span class="tab-label">Books</span>
+        </button>
+        <button class="nav-tab" data-tab="summaries" onclick="switchTab('summaries')">
+            <span class="tab-icon">&#128202;</span><span class="tab-label">Sessions</span>
+        </button>
+    </nav>
+</div>
+
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="analytics.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
