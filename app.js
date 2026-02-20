@@ -564,15 +564,23 @@ function initTextbookForm() {
             showMsg('tb-error', 'Only PDF files are allowed');
             return;
         }
+        // File size check
+        const fileMB = (file.size / (1024 * 1024)).toFixed(1);
+        if (file.size > 50 * 1024 * 1024) {
+            showMsg('tb-error', 'File too large (' + fileMB + 'MB). Maximum is 50MB.');
+            return;
+        }
 
         setButtonLoading(btn, true);
         const progressEl = document.getElementById('tb-upload-progress');
         if (progressEl) progressEl.style.display = 'block';
+        showMsg('tb-success', 'Uploading ' + fileMB + 'MB... This may take a minute for large files.');
 
         const result = await apiUploadTextbook(file, subject, classLevel, bookName);
 
         setButtonLoading(btn, false);
         if (progressEl) progressEl.style.display = 'none';
+        hideMsg('tb-success');
 
         if (result.success) {
             showMsg('tb-success', `Textbook uploaded! ${result.pages_processed || 0} pages processed.`);

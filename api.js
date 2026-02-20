@@ -182,15 +182,65 @@ async function apiGetTextbooks() {
 }
 
 async function apiUploadTextbook(file, subject, classLevel, bookName) {
+    // File size check (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+        return { error: 'File too large. Maximum size is 50MB.', _status: 0 };
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        console.log('Large file (' + (file.size / (1024*1024)).toFixed(1) + 'MB) - upload may take a minute...');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('subject', subject);
     formData.append('class_level', classLevel);
     formData.append('book_name', bookName);
 
-    return apiCall('/upload-textbook', {
-        method: 'POST',
-        body: formData
+    // Use XMLHttpRequest for upload progress tracking + longer timeout
+    return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', API_BASE + '/upload-textbook');
+        xhr.timeout = 300000; // 5 minute timeout for large PDFs
+
+        // Set auth header
+        const token = localStorage.getItem('guru_token');
+        if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+
+        // Track upload progress
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                const progressEl = document.getElementById('tb-upload-progress');
+                const fill = progressEl ? progressEl.querySelector('.progress-fill') : null;
+                if (fill) fill.style.width = pct + '%';
+                // Also update setup progress if in setup flow
+                const setupProgress = document.getElementById('setup-upload-progress');
+                if (setupProgress && setupProgress.style.display !== 'none') {
+                    setupProgress.textContent = 'Uploading... ' + pct + '%';
+                }
+            }
+        };
+
+        xhr.onload = () => {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                data._status = xhr.status;
+                resolve(data);
+            } catch (e) {
+                resolve({ error: 'Server error (' + xhr.status + '). Try again.', _status: xhr.status });
+            }
+        };
+
+        xhr.onerror = () => {
+            resolve({ error: 'Upload failed. Check your connection and try again.', _status: 0 });
+        };
+
+        xhr.ontimeout = () => {
+            resolve({ error: 'Upload timed out. Try a smaller PDF (under 20MB works best).', _status: 0 });
+        };
+
+        xhr.send(formData);
     });
 }
 
