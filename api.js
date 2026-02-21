@@ -174,6 +174,18 @@ async function apiGetSummaries(studentId, limit) {
 }
 
 // ============================================
+// ANALYTICS API
+// ============================================
+
+async function apiGetAnalytics(studentId) {
+    let url = '/api/analytics';
+    if (studentId) {
+        url += '?student_id=' + studentId;
+    }
+    return apiCall(url);
+}
+
+// ============================================
 // TEXTBOOKS API
 // ============================================
 

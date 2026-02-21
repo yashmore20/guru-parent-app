@@ -359,42 +359,76 @@
     <main class="main-content" id="main-content">
         <!-- HOME TAB -->
         <div id="tab-home" class="tab-content active">
-            <div class="stats-row">
-                <div class="stat-card stat-blue">
-                    <div class="stat-icon">&#9201;</div>
-                    <div class="stat-value" id="stat-study-time">0 min</div>
-                    <div class="stat-label">Today's Study</div>
-                </div>
-                <div class="stat-card stat-green">
-                    <div class="stat-icon">&#9989;</div>
-                    <div class="stat-value" id="stat-hw-done">0</div>
-                    <div class="stat-label">Homework Done</div>
-                </div>
-                <div class="stat-card stat-orange">
-                    <div class="stat-icon">&#127919;</div>
-                    <div class="stat-value" id="stat-quiz-avg">-</div>
-                    <div class="stat-label">Quiz Avg</div>
-                </div>
-                <div class="stat-card stat-red">
+            <!-- TOP STATS ROW (5 cards) -->
+            <div class="stats-row-5">
+                <div class="stat-card stat-fire">
                     <div class="stat-icon">&#128293;</div>
-                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-value" id="stat-streak">0 days</div>
                     <div class="stat-label">Streak</div>
                 </div>
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon">&#9201;</div>
+                    <div class="stat-value" id="stat-avg-time">0 min</div>
+                    <div class="stat-label">Avg Time</div>
+                </div>
+                <div class="stat-card stat-green">
+                    <div class="stat-icon">&#127919;</div>
+                    <div class="stat-value" id="stat-accuracy">-</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card stat-purple">
+                    <div class="stat-icon">&#128202;</div>
+                    <div class="stat-value" id="stat-exam-readiness">-</div>
+                    <div class="stat-label">Exam Ready</div>
+                </div>
+                <div class="stat-card stat-hw hw-none" id="stat-hw-card">
+                    <div class="stat-icon">&#128221;</div>
+                    <div class="stat-value" id="stat-hw-status">-</div>
+                    <div class="stat-label">Homework</div>
+                    <div class="stat-detail" id="stat-hw-detail"></div>
+                </div>
             </div>
+
+            <!-- Overall Progress Trend (Line Chart) -->
             <div class="chart-card">
-                <h3>Learning Activities This Week</h3>
-                <p class="chart-sub" id="chart-sub-name">See how your child is using Guru</p>
-                <div class="chart-wrap"><canvas id="featureChart"></canvas></div>
+                <h3>Overall Progress</h3>
+                <p class="chart-sub" id="chart-sub-name">Accuracy trend over the last 7 days</p>
+                <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
             </div>
+
+            <!-- Subject Performance (Horizontal Bar Chart) -->
             <div class="chart-card">
-                <h3>Performance by Subject</h3>
+                <h3>Subject Performance</h3>
+                <p class="chart-sub">Accuracy by subject</p>
                 <div class="chart-wrap"><canvas id="subjectChart"></canvas></div>
             </div>
-            <div class="chart-card">
-                <h3>Skills Assessment</h3>
-                <p class="chart-sub">Based on Guru's AI analysis</p>
-                <div class="chart-wrap"><canvas id="skillsChart"></canvas></div>
+
+            <!-- Weakest Topics (Focus Areas) -->
+            <div class="section-card">
+                <h3>Focus Areas</h3>
+                <p class="chart-sub">Topics that need more practice</p>
+                <div id="weakest-topics" class="topics-list">
+                    <div class="empty-state" style="padding:20px 8px;">
+                        <p style="color:#888;font-size:14px;">No focus areas identified yet.</p>
+                    </div>
+                </div>
             </div>
+
+            <!-- Study Consistency (28-day Heatmap) -->
+            <div class="section-card">
+                <h3>Study Consistency</h3>
+                <p class="chart-sub">Last 28 days activity</p>
+                <div id="study-heatmap" class="heatmap-container"></div>
+            </div>
+
+            <!-- Exam Readiness Gauge -->
+            <div class="chart-card">
+                <h3>Exam Readiness</h3>
+                <p class="chart-sub">Based on accuracy, consistency &amp; subject coverage</p>
+                <div id="exam-readiness-gauge" class="gauge-container"></div>
+            </div>
+
+            <!-- Recent Sessions -->
             <div class="section-card">
                 <h3>Recent Sessions</h3>
                 <div id="recent-sessions" class="list-container">
@@ -405,6 +439,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Quick Actions -->
             <div class="quick-actions-grid">
                 <button class="quick-action" onclick="switchTab('homework')">
                     <span class="qa-icon">&#128221;</span><span>Assign Homework</span>

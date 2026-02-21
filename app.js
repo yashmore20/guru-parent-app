@@ -305,68 +305,25 @@ async function initAppShell() {
 // HOME TAB
 // ============================================================
 async function loadHomeTab() {
-    // Load summaries for charts and stats
-    const summariesRes = await apiGetSummaries(activeStudentId, 50);
-    const summaries = summariesRes.summaries || [];
+    // Fetch analytics data from pre-computed endpoint
+    const analyticsRes = await apiGetAnalytics(activeStudentId);
 
-    // Load homework for stats
-    const homeworkRes = await apiGetHomework();
-    const homework = homeworkRes.homework || [];
-
-    // Update stats
-    updateQuickStats(summaries, homework);
-
-    // Update chart subtitle
+    // Update chart subtitle with student name
     if (activeStudentId) {
         const student = cachedStudents.find(s => s.id === activeStudentId);
         const subEl = document.getElementById('chart-sub-name');
-        if (subEl && student) subEl.textContent = `See how ${student.name} is using Guru`;
+        if (subEl && student) subEl.textContent = `${student.name}'s accuracy over the last 7 days`;
     }
 
-    // Render charts
-    renderAllCharts(summaries);
-
-    // Render recent sessions
-    renderRecentSessions(summaries.slice(0, 5));
-}
-
-function updateQuickStats(summaries, homework) {
-    // Study time (estimate: 15 min per session today)
-    const today = new Date().toISOString().split('T')[0];
-    const todaySessions = summaries.filter(s => (s.session_date || s.created_at || '').startsWith(today));
-    const studyTime = todaySessions.length * 15;
-    document.getElementById('stat-study-time').textContent = studyTime > 0 ? studyTime + ' min' : '0 min';
-
-    // Homework done (count completed or total assigned)
-    document.getElementById('stat-hw-done').textContent = homework.length;
-
-    // Quiz average (derive from understanding levels)
-    if (summaries.length > 0) {
-        const scores = summaries.map(s => {
-            const level = s.understanding_level || 'unknown';
-            return level === 'strong' ? 90 : level === 'moderate' ? 65 : level === 'needs_help' ? 35 : 0;
-        }).filter(s => s > 0);
-        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-        document.getElementById('stat-quiz-avg').textContent = avg > 0 ? avg + '%' : '-';
-    } else {
-        document.getElementById('stat-quiz-avg').textContent = '-';
+    // Render all analytics (stat cards + 5 visualizations)
+    if (!analyticsRes.error) {
+        renderAnalytics(analyticsRes);
     }
 
-    // Streak (consecutive days with sessions in last 7 days)
-    let streak = 0;
-    const todayDate = new Date();
-    for (let i = 0; i < 30; i++) {
-        const d = new Date(todayDate);
-        d.setDate(todayDate.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        const hasSession = summaries.some(s => (s.session_date || s.created_at || '').startsWith(dateStr));
-        if (hasSession) {
-            streak++;
-        } else if (i > 0) {
-            break; // Streak broken
-        }
-    }
-    document.getElementById('stat-streak').textContent = streak;
+    // Load recent sessions (still from summaries endpoint)
+    const summariesRes = await apiGetSummaries(activeStudentId, 5);
+    const summaries = summariesRes.summaries || [];
+    renderRecentSessions(summaries);
 }
 
 function renderRecentSessions(summaries) {

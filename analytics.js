@@ -1,16 +1,20 @@
 /* ============================================================
-   GURU.AI PARENT PORTAL - ANALYTICS / CHARTS
-   Chart.js powered visualizations for the Home tab.
+   GURU.AI PARENT PORTAL - ANALYTICS DASHBOARD
+   Data-driven visualizations powered by the /api/analytics endpoint.
 
-   Three charts:
-   1. featureChart  - Bar chart: Learning activities this week
-   2. subjectChart  - Bar chart: Performance by subject
-   3. skillsChart   - Radar chart: Skills assessment
+   5 Visualizations:
+   1. Progress Trend    - Line chart (7-day accuracy trend)
+   2. Subject Performance - Horizontal bar chart (per-subject accuracy)
+   3. Weakest Topics    - Styled HTML list with progress bars
+   4. Study Consistency - 28-day heatmap grid
+   5. Exam Readiness    - Circular gauge
+
+   Top Stats Row (5 cards):
+   Streak | Avg Time | Accuracy | Exam Readiness | Homework Status
    ============================================================ */
 
-let featureChartInstance = null;
+let progressChartInstance = null;
 let subjectChartInstance = null;
-let skillsChartInstance = null;
 
 // Chart.js global defaults
 if (typeof Chart !== 'undefined') {
@@ -23,6 +27,7 @@ if (typeof Chart !== 'undefined') {
 const chartColors = {
     blue: 'rgba(135, 206, 235, 0.8)',
     blueBorder: '#5bb5d6',
+    blueFill: 'rgba(135, 206, 235, 0.15)',
     brown: 'rgba(210, 180, 140, 0.8)',
     brownBorder: '#b89468',
     green: 'rgba(76, 175, 80, 0.8)',
@@ -35,63 +40,133 @@ const chartColors = {
     purpleBorder: '#7b1fa2'
 };
 
-const subjectColors = [
-    chartColors.blue,
-    chartColors.green,
-    chartColors.orange,
-    chartColors.brown,
-    chartColors.red,
-    chartColors.purple
-];
+const subjectColorMap = {
+    'Mathematics': { bg: chartColors.blue, border: chartColors.blueBorder },
+    'Science': { bg: chartColors.green, border: chartColors.greenBorder },
+    'English': { bg: chartColors.orange, border: chartColors.orangeBorder },
+    'Hindi': { bg: chartColors.brown, border: chartColors.brownBorder },
+    'Social Studies': { bg: chartColors.purple, border: chartColors.purpleBorder },
+    'General': { bg: chartColors.red, border: chartColors.redBorder },
+    'GK': { bg: 'rgba(0,188,212,0.7)', border: '#00838f' },
+    'EVS': { bg: 'rgba(139,195,74,0.7)', border: '#558b2f' }
+};
 
-const subjectBorders = [
-    chartColors.blueBorder,
-    chartColors.greenBorder,
-    chartColors.orangeBorder,
-    chartColors.brownBorder,
-    chartColors.redBorder,
-    chartColors.purpleBorder
-];
+function getSubjectColor(subject) {
+    return subjectColorMap[subject] || { bg: chartColors.blue, border: chartColors.blueBorder };
+}
 
 // ============================================================
-// 1. FEATURE CHART - Learning Activities This Week
+// MASTER RENDER FUNCTION
 // ============================================================
-function renderFeatureChart(summaries) {
-    const canvas = document.getElementById('featureChart');
+function renderAnalytics(data) {
+    if (!data) return;
+
+    // Update top stat cards
+    updateStatCards(data);
+
+    // Render 5 visualizations
+    renderProgressTrend(data.progress_trend || []);
+    renderSubjectPerformance(data.subject_performance || []);
+    renderWeakestTopics(data.weakest_topics || []);
+    renderStudyConsistency(data.study_consistency || []);
+    renderExamReadiness(data.exam_readiness || 0);
+}
+
+// ============================================================
+// TOP STAT CARDS
+// ============================================================
+function updateStatCards(data) {
+    // Streak
+    const streakEl = document.getElementById('stat-streak');
+    if (streakEl) {
+        streakEl.textContent = (data.streak || 0) + ' days';
+    }
+
+    // Avg Time
+    const avgTimeEl = document.getElementById('stat-avg-time');
+    if (avgTimeEl) {
+        const mins = data.avg_time || 0;
+        avgTimeEl.textContent = mins > 0 ? mins + ' min' : '0 min';
+    }
+
+    // Accuracy
+    const accEl = document.getElementById('stat-accuracy');
+    if (accEl) {
+        accEl.textContent = data.total_attempts > 0 ? data.accuracy + '%' : '-';
+    }
+
+    // Exam Readiness
+    const erEl = document.getElementById('stat-exam-readiness');
+    if (erEl) {
+        erEl.textContent = data.total_attempts > 0 ? data.exam_readiness + '%' : '-';
+    }
+
+    // Homework Status
+    const hwEl = document.getElementById('stat-hw-status');
+    const hwCard = document.getElementById('stat-hw-card');
+    if (hwEl && data.homework_status) {
+        const hw = data.homework_status;
+        if (hw.status === 'done') {
+            hwEl.textContent = 'Done';
+            if (hwCard) hwCard.className = 'stat-card stat-hw hw-done';
+        } else if (hw.status === 'pending') {
+            hwEl.textContent = 'Pending';
+            if (hwCard) hwCard.className = 'stat-card stat-hw hw-pending';
+        } else {
+            hwEl.textContent = 'None';
+            if (hwCard) hwCard.className = 'stat-card stat-hw hw-none';
+        }
+        // Show count detail below
+        const hwDetail = document.getElementById('stat-hw-detail');
+        if (hwDetail) {
+            if (hw.total > 0) {
+                hwDetail.textContent = hw.done + ' done / ' + hw.pending + ' left';
+            } else {
+                hwDetail.textContent = 'Not assigned';
+            }
+        }
+    }
+}
+
+// ============================================================
+// 1. PROGRESS TREND - Line Chart (7-day accuracy)
+// ============================================================
+function renderProgressTrend(trend) {
+    const canvas = document.getElementById('progressChart');
     if (!canvas || typeof Chart === 'undefined') return;
 
-    if (featureChartInstance) {
-        featureChartInstance.destroy();
-        featureChartInstance = null;
+    if (progressChartInstance) {
+        progressChartInstance.destroy();
+        progressChartInstance = null;
     }
 
-    // Build last-7-day data from session summaries
-    const days = [];
-    const counts = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const label = d.toLocaleDateString('en-IN', { weekday: 'short' });
-        const dateStr = d.toISOString().split('T')[0];
-        days.push(label);
-        counts.push(
-            summaries.filter(s => (s.session_date || s.created_at || '').startsWith(dateStr)).length
-        );
-    }
+    const labels = trend.map(d => {
+        const dt = new Date(d.date + 'T00:00:00');
+        return dt.toLocaleDateString('en-IN', { weekday: 'short' });
+    });
 
-    featureChartInstance = new Chart(canvas, {
-        type: 'bar',
+    const accuracyData = trend.map(d => d.accuracy);
+    const attemptsData = trend.map(d => d.attempts);
+    const hasData = attemptsData.some(v => v > 0);
+
+    progressChartInstance = new Chart(canvas, {
+        type: 'line',
         data: {
-            labels: days,
+            labels: labels,
             datasets: [{
-                label: 'Study Sessions',
-                data: counts,
-                backgroundColor: chartColors.blue,
+                label: 'Accuracy %',
+                data: accuracyData,
                 borderColor: chartColors.blueBorder,
-                borderWidth: 2,
-                borderRadius: 8,
-                borderSkipped: false,
+                backgroundColor: chartColors.blueFill,
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointBackgroundColor: chartColors.blueBorder,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                spanGaps: true
             }]
         },
         options: {
@@ -104,7 +179,13 @@ function renderFeatureChart(summaries) {
                     backgroundColor: 'rgba(44,44,44,0.9)',
                     cornerRadius: 8,
                     callbacks: {
-                        label: ctx => ` ${ctx.raw} session${ctx.raw !== 1 ? 's' : ''}`
+                        label: function(ctx) {
+                            const idx = ctx.dataIndex;
+                            const acc = ctx.raw;
+                            const att = attemptsData[idx] || 0;
+                            if (acc === null || acc === undefined) return ' No activity';
+                            return ` ${acc}% accuracy (${att} questions)`;
+                        }
                     }
                 }
             },
@@ -117,17 +198,38 @@ function renderFeatureChart(summaries) {
                     grid: { color: 'rgba(0,0,0,0.04)' },
                     border: { display: false },
                     beginAtZero: true,
-                    ticks: { stepSize: 1, precision: 0 }
+                    max: 100,
+                    ticks: {
+                        callback: v => v + '%',
+                        stepSize: 25
+                    }
                 }
             }
         }
     });
+
+    // Show empty state overlay if no data
+    const wrap = canvas.closest('.chart-card');
+    if (wrap) {
+        let overlay = wrap.querySelector('.chart-empty-overlay');
+        if (!hasData) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'chart-empty-overlay';
+                overlay.innerHTML = '<p>No quiz data yet. Progress will appear after your child takes quizzes.</p>';
+                wrap.querySelector('.chart-wrap').appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+        } else if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
 }
 
 // ============================================================
-// 2. SUBJECT CHART - Performance by Subject
+// 2. SUBJECT PERFORMANCE - Horizontal Bar Chart
 // ============================================================
-function renderSubjectChart(summaries) {
+function renderSubjectPerformance(subjects) {
     const canvas = document.getElementById('subjectChart');
     if (!canvas || typeof Chart === 'undefined') return;
 
@@ -136,50 +238,32 @@ function renderSubjectChart(summaries) {
         subjectChartInstance = null;
     }
 
-    // Aggregate understanding levels per subject topic
-    const subjectMap = {};
-    summaries.forEach(s => {
-        const topics = Array.isArray(s.topics_covered) ? s.topics_covered : [];
-        const level = s.understanding_level || 'unknown';
-        const score = level === 'strong' ? 3 : level === 'moderate' ? 2 : level === 'needs_help' ? 1 : 0;
-
-        topics.forEach(topic => {
-            // Try to extract subject from topic keywords
-            const subj = guessSubject(topic);
-            if (!subjectMap[subj]) {
-                subjectMap[subj] = { total: 0, count: 0 };
-            }
-            subjectMap[subj].total += score;
-            subjectMap[subj].count += 1;
-        });
-    });
-
-    const subjects = Object.keys(subjectMap);
     if (subjects.length === 0) {
-        // Show placeholder
-        subjects.push('Maths', 'Science', 'English');
-        subjects.forEach(s => {
-            subjectMap[s] = { total: 0, count: 1 };
-        });
+        const wrap = canvas.closest('.chart-card');
+        if (wrap) {
+            const chartWrap = wrap.querySelector('.chart-wrap');
+            chartWrap.innerHTML = '<div class="chart-empty-state"><p>No subject data yet</p></div>';
+        }
+        return;
     }
 
-    const avgScores = subjects.map(s => {
-        const data = subjectMap[s];
-        return data.count > 0 ? Math.round((data.total / data.count) * 33.3) : 0; // Scale to 0-100
-    });
+    const labels = subjects.map(s => s.subject);
+    const data = subjects.map(s => s.accuracy);
+    const bgColors = subjects.map(s => getSubjectColor(s.subject).bg);
+    const borderColors = subjects.map(s => getSubjectColor(s.subject).border);
 
     subjectChartInstance = new Chart(canvas, {
         type: 'bar',
         data: {
-            labels: subjects,
+            labels: labels,
             datasets: [{
-                label: 'Performance',
-                data: avgScores,
-                backgroundColor: subjects.map((_, i) => subjectColors[i % subjectColors.length]),
-                borderColor: subjects.map((_, i) => subjectBorders[i % subjectBorders.length]),
+                label: 'Accuracy',
+                data: data,
+                backgroundColor: bgColors,
+                borderColor: borderColors,
                 borderWidth: 2,
                 borderRadius: 6,
-                borderSkipped: false,
+                borderSkipped: false
             }]
         },
         options: {
@@ -191,7 +275,11 @@ function renderSubjectChart(summaries) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ` Score: ${ctx.raw}%`
+                        label: function(ctx) {
+                            const idx = ctx.dataIndex;
+                            const att = subjects[idx].attempts || 0;
+                            return ` ${ctx.raw}% accuracy (${att} Qs)`;
+                        }
                     }
                 }
             },
@@ -213,101 +301,183 @@ function renderSubjectChart(summaries) {
 }
 
 // ============================================================
-// 3. SKILLS CHART - Radar
+// 3. WEAKEST TOPICS - HTML List with Progress Bars
 // ============================================================
-function renderSkillsChart(summaries) {
-    const canvas = document.getElementById('skillsChart');
-    if (!canvas || typeof Chart === 'undefined') return;
+function renderWeakestTopics(topics) {
+    const container = document.getElementById('weakest-topics');
+    if (!container) return;
 
-    if (skillsChartInstance) {
-        skillsChartInstance.destroy();
-        skillsChartInstance = null;
+    if (topics.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="padding:20px 8px;">
+                <p style="color:#888;font-size:14px;">No focus areas identified yet.</p>
+                <p class="empty-sub">Topics that need more practice will appear here.</p>
+            </div>`;
+        return;
     }
 
-    // Derive skill scores from summaries
-    const skills = ['Comprehension', 'Problem Solving', 'Vocabulary', 'Application', 'Memory'];
+    container.innerHTML = topics.map((t, i) => {
+        const color = getSubjectColor(t.subject);
+        const barWidth = Math.max(t.accuracy, 5); // minimum 5% for visibility
+        const accColor = t.accuracy < 40 ? '#d32f2f' : t.accuracy < 60 ? '#f57c00' : '#388e3c';
+        return `
+            <div class="topic-item">
+                <div class="topic-info">
+                    <span class="topic-name">${escapeHtml(t.topic)}</span>
+                    <span class="topic-subject-tag" style="background:${color.bg};color:${color.border};">${escapeHtml(t.subject)}</span>
+                </div>
+                <div class="topic-bar-row">
+                    <div class="topic-bar">
+                        <div class="topic-bar-fill" style="width:${barWidth}%;background:${accColor};"></div>
+                    </div>
+                    <span class="topic-acc" style="color:${accColor};">${t.accuracy}%</span>
+                </div>
+                <div class="topic-meta">${t.attempts} attempts</div>
+            </div>`;
+    }).join('');
+}
 
-    // Generate scores from understanding levels if data exists
-    let scores;
-    if (summaries.length > 0) {
-        const levelScores = summaries.map(s => {
-            const level = s.understanding_level || 'unknown';
-            return level === 'strong' ? 85 : level === 'moderate' ? 60 : level === 'needs_help' ? 30 : 0;
-        });
-        const avg = levelScores.reduce((a, b) => a + b, 0) / levelScores.length;
-        // Add some variance between skills for visual interest
-        scores = [
-            Math.min(100, Math.round(avg + 10)),
-            Math.min(100, Math.round(avg - 5)),
-            Math.min(100, Math.round(avg + 5)),
-            Math.min(100, Math.round(avg - 10)),
-            Math.min(100, Math.round(avg))
-        ];
-    } else {
-        scores = [0, 0, 0, 0, 0];
+// ============================================================
+// 4. STUDY CONSISTENCY - 28-Day Heatmap Grid
+// ============================================================
+function renderStudyConsistency(days) {
+    const container = document.getElementById('study-heatmap');
+    if (!container) return;
+
+    if (days.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No activity data yet</p></div>';
+        return;
     }
 
-    skillsChartInstance = new Chart(canvas, {
-        type: 'radar',
-        data: {
-            labels: skills,
-            datasets: [{
-                label: 'Skills',
-                data: scores,
-                backgroundColor: 'rgba(135, 206, 235, 0.2)',
-                borderColor: chartColors.blueBorder,
-                borderWidth: 2,
-                pointBackgroundColor: chartColors.blueBorder,
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1.2,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        display: false,
-                        stepSize: 20
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.06)'
-                    },
-                    pointLabels: {
-                        font: { size: 12, weight: '600' },
-                        color: '#555'
-                    }
-                }
+    // Find max count for color scaling
+    const maxCount = Math.max(...days.map(d => d.count), 1);
+
+    // Day labels
+    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    // Build the grid HTML (4 weeks x 7 days)
+    let html = '<div class="heatmap-grid">';
+
+    // Day headers
+    html += '<div class="heatmap-row heatmap-header">';
+    dayLabels.forEach(label => {
+        html += `<div class="heatmap-label">${label}</div>`;
+    });
+    html += '</div>';
+
+    // Data rows (4 weeks)
+    for (let week = 0; week < 4; week++) {
+        html += '<div class="heatmap-row">';
+        for (let day = 0; day < 7; day++) {
+            const idx = week * 7 + day;
+            if (idx < days.length) {
+                const d = days[idx];
+                const count = d.count || 0;
+                const intensity = count === 0 ? 0 : Math.min(Math.ceil(count / maxCount * 4), 4);
+                const dateObj = new Date(d.date + 'T00:00:00');
+                const dateLabel = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                const title = `${dateLabel}: ${count} activit${count === 1 ? 'y' : 'ies'}`;
+                html += `<div class="heatmap-cell level-${intensity}" title="${title}"></div>`;
+            } else {
+                html += '<div class="heatmap-cell level-0"></div>';
             }
         }
-    });
+        html += '</div>';
+    }
+
+    html += '</div>';
+
+    // Legend
+    html += `
+        <div class="heatmap-legend">
+            <span class="heatmap-legend-label">Less</span>
+            <div class="heatmap-cell-small level-0"></div>
+            <div class="heatmap-cell-small level-1"></div>
+            <div class="heatmap-cell-small level-2"></div>
+            <div class="heatmap-cell-small level-3"></div>
+            <div class="heatmap-cell-small level-4"></div>
+            <span class="heatmap-legend-label">More</span>
+        </div>`;
+
+    container.innerHTML = html;
 }
 
 // ============================================================
-// RENDER ALL CHARTS
+// 5. EXAM READINESS - Circular Gauge
 // ============================================================
-function renderAllCharts(summaries) {
-    renderFeatureChart(summaries);
-    renderSubjectChart(summaries);
-    renderSkillsChart(summaries);
+function renderExamReadiness(score) {
+    const container = document.getElementById('exam-readiness-gauge');
+    if (!container) return;
+
+    score = Math.max(0, Math.min(100, score || 0));
+
+    // Determine color and label
+    let color, label;
+    if (score >= 80) {
+        color = '#4CAF50';
+        label = 'Excellent';
+    } else if (score >= 60) {
+        color = '#FF9800';
+        label = 'Good';
+    } else if (score >= 40) {
+        color = '#f57c00';
+        label = 'Improving';
+    } else if (score > 0) {
+        color = '#F44336';
+        label = 'Needs Work';
+    } else {
+        color = '#ccc';
+        label = 'No Data';
+    }
+
+    // SVG circular gauge
+    const radius = 70;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (score / 100) * circumference;
+
+    container.innerHTML = `
+        <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 180 180">
+                <circle class="gauge-bg" cx="90" cy="90" r="${radius}" />
+                <circle class="gauge-fill" cx="90" cy="90" r="${radius}"
+                    stroke="${color}"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"
+                    style="transition: stroke-dashoffset 1s ease;"
+                />
+            </svg>
+            <div class="gauge-center">
+                <span class="gauge-value" style="color:${color};">${score > 0 ? score + '%' : '-'}</span>
+                <span class="gauge-label">${label}</span>
+            </div>
+        </div>
+        <div class="gauge-breakdown">
+            <div class="gauge-factor">
+                <span class="gauge-factor-dot" style="background:#5bb5d6;"></span>
+                <span>Accuracy (40%)</span>
+            </div>
+            <div class="gauge-factor">
+                <span class="gauge-factor-dot" style="background:#FF9800;"></span>
+                <span>Consistency (30%)</span>
+            </div>
+            <div class="gauge-factor">
+                <span class="gauge-factor-dot" style="background:#4CAF50;"></span>
+                <span>Coverage (30%)</span>
+            </div>
+        </div>`;
 }
 
-// ---- HELPER: Guess subject from topic string ----
-function guessSubject(topic) {
-    const t = (topic || '').toLowerCase();
-    if (t.includes('math') || t.includes('number') || t.includes('algebra') || t.includes('geometry') || t.includes('fraction') || t.includes('arithm')) return 'Maths';
-    if (t.includes('science') || t.includes('physics') || t.includes('chemistry') || t.includes('biology') || t.includes('atom')) return 'Science';
-    if (t.includes('english') || t.includes('grammar') || t.includes('reading') || t.includes('essay') || t.includes('story')) return 'English';
-    if (t.includes('hindi') || t.includes('vyakaran')) return 'Hindi';
-    if (t.includes('social') || t.includes('history') || t.includes('geography') || t.includes('civics')) return 'Social';
-    if (t.includes('evs') || t.includes('environment')) return 'EVS';
-    return 'General';
+// ============================================================
+// HELPER: Escape HTML (fallback if not defined in app.js)
+// ============================================================
+if (typeof escapeHtml === 'undefined') {
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 }
